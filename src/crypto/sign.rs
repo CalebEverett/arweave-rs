@@ -5,7 +5,7 @@ use data_encoding::BASE64URL;
 use jsonwebkey as jwk;
 use rand::thread_rng;
 use rsa::{
-    pkcs8::{DecodePrivateKey, DecodePublicKey},
+    pkcs8::{FromPrivateKey, FromPublicKey},
     PaddingScheme, PublicKey, PublicKeyParts, RsaPrivateKey, RsaPublicKey,
 };
 use sha2::Digest;
@@ -74,7 +74,7 @@ impl Signer {
 
         let signature = self
             .priv_key
-            .sign(padding, &hashed)
+            .sign(padding, &hashed.as_ref())
             .map_err(|e| Error::SigningError(e.to_string()))?;
 
         Ok(Base64(signature))
@@ -99,7 +99,7 @@ impl Signer {
             salt_len: None,
         };
         pub_key
-            .verify(padding, hashed, signature)
+            .verify(padding, hashed.as_ref(), signature)
             .map(|_| ())
             .map_err(|_| Error::InvalidSignature)
     }
